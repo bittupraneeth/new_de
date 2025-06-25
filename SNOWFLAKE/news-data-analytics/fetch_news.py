@@ -5,7 +5,7 @@ import datetime
 from datetime import date
 import uuid
 import os
-from google.cloud import storage
+# from google.cloud import storage
 
 def upload_to_gcs(bucket_name, destination_blob_name, source_file_name):
     storage_client = storage.Client()
@@ -16,17 +16,20 @@ def upload_to_gcs(bucket_name, destination_blob_name, source_file_name):
 
 def fetch_news_data():
     today = date.today()
-    api_key = '********************'
+    api_key = 'eebe6c8d9f3144beb2a7b32b15e5d1b6'
 
     base_url = "https://newsapi.org/v2/everything?q={}&from={}&to={}&sortBy=popularity&apiKey={}&language=en"
     start_date_value = str(today - datetime.timedelta(days=1))
     end_date_value = str(today)
 
     df = pd.DataFrame(columns=['newsTitle', 'timestamp', 'url_source', 'content', 'source', 'author', 'urlToImage'])
-
+    print("HIII")
     url_extractor = base_url.format("apple", start_date_value, end_date_value, api_key)
+    url_extractor="https://newsapi.org/v2/everything?q=tesla&from=2025-05-24&sortBy=publishedAt&apiKey=eebe6c8d9f3144beb2a7b32b15e5d1b6"
     response = requests.get(url_extractor)
+    print("HIII")
     d = response.json()
+    print("HIII")
 
     for i in d['articles']:
         newsTitle = i['title']
@@ -69,7 +72,9 @@ def fetch_news_data():
     # Upload to GCS
     bucket_name = 'snowflake_projects_test'
     destination_blob_name = f'news_data_analysis/parquet_files/{filename}'
-    upload_to_gcs(bucket_name, destination_blob_name, filename)
+    # upload_to_gcs(bucket_name, destination_blob_name, filename)
 
     # Remove local file after upload
-    os.remove(filename)
+    # os.remove(filename)
+
+fetch_news_data()    
