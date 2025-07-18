@@ -1,0 +1,564 @@
+  Property	                Meaning	                                                 		Purpose
+A - Atomicity	         All operations in a transaction succeed or none do.	                    Ensures no partial updates.
+C - Consistency	         Data must be valid according to rules (constraints, schema).	            Ensures integrity.
+I - Isolation	         Concurrent transactions don’t affect each other.	                    Prevents dirty reads, race conditions.
+D - Durability	         Once a transaction is committed, it remains even after failure.	    Ensures data is safe permanently.
+
+
+***1.Atomicity
+BEGIN TRANSACTION;
+UPDATE employees SET job_title = 'Senior Developer' WHERE emp_id = 101;
+UPDATE employees SET salary = 70000 WHERE emp_id = 101;
+COMMIT;
+What if something fails?
+Let’s say the salary update line fails due to a bug or power outage. Thanks to Atomicity, the entire transaction is rolled back, and Rahul remains a Developer with ₹50,000 salary.
+✅ Guarantees no half-done updates.
+
+BEGIN TRANSACTION;
+UPDATE accounts SET balance = balance - 100 WHERE name = 'Alice'; -- Debit
+UPDATE accounts SET balance = balance + 100 WHERE name = 'Bob';   -- Credit
+COMMIT;
+
+
+How ACID works here:
+Atomicity: If Bob’s account update fails, Alice’s debit is rolled back.
+
+Consistency: The total money (Alice + Bob) before and after stays the same.
+
+Isolation: If someone checks Bob’s balance during this process, they don’t see partial changes.
+
+Durability: Even if power goes off after COMMIT, Bob will have ₹100 added.
+
+
+
+MYSQL:Even though it's not case-sensitive for keywords, developers often:
+Use UPPERCASE for SQL keywords (SELECT, FROM, WHERE)
+Use lowercase for table/column names
+
+
+ALTER::
+ALTER TABLE your_table_name ADD COLUMN salary INT;
+ALTER TABLE your_table_name MODIFY COLUMN name VARCHAR(100);
+ALTER TABLE your_table_name DROP COLUMN salary;
+ALTER TABLE your_table_name RENAME COLUMN salary TO Salary;
+
+
+Integrity Constraints ::
+
+CREATE TABLE departments (
+    dept_id INT PRIMARY KEY,
+    dept_name VARCHAR(100) NOT NULL UNIQUE
+);
+
+-- Now create the 'employees' table using all constraints
+CREATE TABLE employees (
+    emp_id INT PRIMARY KEY,                             -- PRIMARY KEY
+    emp_name VARCHAR(100) NOT NULL,                     -- NOT NULL
+    email VARCHAR(100) UNIQUE,                          -- UNIQUE
+    salary DECIMAL(10, 2) CHECK (salary > 0),           -- CHECK
+    hire_date DATE DEFAULT CURRENT_DATE,                -- DEFAULT
+    dept_id INT,                                        -- FOREIGN KEY reference
+    FOREIGN KEY (dept_id) REFERENCES departments(dept_id)
+);
+
+Auto Increment:
+create table tbl_name
+(
+id int auto_increment,
+name varchar(20),
+primary key id );
+
+
+Limit :
+select * from table Limit 100;
+
+Order by :(by default Ascending order )
+
+
+Select * from table_name order by col_name;
+Select * from table_name order by col_name Desc;
+MultiLavel Ordering:
+Select * from emp order by salary Desc, name Asc; or (Select * from emp order by salary Desc, name;)
+
+Q 1 :
+EMP GETTING THE MAXIMUM salary  return only one record:
+Select * from emp order by salary Desc Limit 1;
+
+Conditional operators <,>,=
+Logical operator AND,OR,NOT:
+
+Select * from emp where salary>=10000;
+Select * from emp where salary!=10000; or (Select * from emp where salary<>10000;)
+
+Select * from emp where salary>=10000 or age <25;
+Select * from emp where salary>=10000 AND age <25;
+
+
+Between :(both the boundaries are inclusive .)
+Select * from emp where  salary between 10000 and 10000;
+
+LIKE OPERATION (mostly used when working with the strings --searching for any substring )  
+
+
+% represent the zero or one or more characters 
+_ represent exactlhy one character
+
+Q1 :
+get all the records whose name starats with the s 
+
+Select * from emp where name Like 's%' ;
+returns all the names like (sai,sunil,suprit etc in the table )
+
+Q2 :
+name ends with l
+Select * from emp where name Like '%l' ; (returns sunil,sahil,piyul)
+Q3 :
+name ends with l starts with s
+Select * from emp where name Like 's%l' ; (returns sunil)
+Q4 :
+name having only 3 letters 
+Select * from emp where name Like '___' ; (returns sai)
+
+Q5 :
+name having atleast 3 letters 
+Select * from emp where name Like '___%' ; (returns sai)
+or 
+Select * from emp where name Like '%___%' ;
+or 
+Select * from emp where name Like '%___' ;
+
+
+NULL:
+
+Select * from emp where salary is null;
+
+Select * from emp where salary is not null;
+
+Group BY : (will helps in creating the smaller chunks of data in table with the help of grouping Key )
+Any other column apart from the grouping key we can only use  with aggregations functions only not as plain rows ..
+
+
+
+select country ,count(*) as total_number_of_order 
+from order_data 
+groupby country;
+
+
+select country,
+state, 
+count(*) as state_wise_order_count, 
+from order_data 
+groupby country,state;
+
+
+
+Q1 :
+sum of salary each age group is earning :
+
+select age ,sum(salary) as total_salary
+from emp
+groupby age;
+
+
+select age ,
+sum(salary) as total_salary,
+AVG(salary) as avg_salary,
+max(salary) as max_salary,
+min(salary) as min_salary,
+from emp
+groupby age;
+
+
+
+HAVING :
+Having Can only used when we are using groupby 
+*******
+Select command will execute at the end of the query just it shows the result so it executes at the last .....
+
+
+
+Q1:
+write a query to find the country whose number of orders are less than the 20 
+
+
+select country,
+count(*) as country_wise_order_count
+from order_data
+groupby country
+having count(*)<20;
+
+or 
+
+Nested Query or SubQuery 
+select * 
+(select country,
+count(*) as country_wise_order_count
+from order_data
+groupby country) result 
+where country_wise_order_count<20;
+
+
+
+**************
+what is the differnce between the Having and where ?
+
+Ans :
+number of itrations is more in nested query 
+when we use the having the while runtime only we are filtering ....
+but in nested query we are reiterating the result and checking each row ....
+
+
+
+
+************
+where ,groupby >> groupby,where (efficiency comparion)
+
+where ,groupby  in first step only we are removing all the unnessary data 
+
+
+
+Group Contact :::
+
+
+Q1:
+write a query to print the distinct states present in the dataset for each country?
+
+
+Select country,
+group_concat(distinct state) as distinct_states
+from order_data
+groupby country;
+
+By default ascending order state 
+Returns in the below manner :
+
+Usa   city1,city2,city3,city4
+India AP,TG,UP
+
+
+Select country,
+group_concat(distinct state order by Desc seperator '//') as distinct_states
+from order_data
+groupby country;
+
+Returns in the below manner :
+
+Usa   city4//city3//city2//city1
+India UP//TG//AP
+
+
+
+
+SUBQUERIES :::  (Always bottom to top)
+
+
+Q1:
+write the query to print all the employee names whose salary is greater than the Rohit.
+
+Ans:
+Select name,salary  from emp where salary> (select salary as rohit_salary from  emp where lower(name)='rohit');
+
+
+IN and NOT IN:
+
+Q1: write a query to print all the orders which belongs to UP,GOA 
+
+
+Select * from orders_data where lower(state) IN ('up','goa');
+
+ineffective manner
+
+Select * from orders_data where lower(state)='up' or lower(state)='goa'
+
+
+
+Q2:
+write a query to find all the customer orders
+where all customers is from same country  as the supplier?
+
+
+customer_data (cust_id,cust_name,cust_country,supp_id)
+supplier_data(supplier_data,supplier_country)
+
+
+
+SELECT * 
+FROM customer_data 
+WHERE cust_country = (
+    SELECT supplier_country 
+    FROM supplier_data 
+    WHERE supplier_data = customer_data.supp_id
+);
+
+
+
+
+CASE ,WHEN:
+
+
+create table  students
+(
+id int,
+name varchar(50),
+marks int
+);
+
+
+
+select *,
+Case
+   WHEN marks>=70 'pass'
+   when marks >=40 'avg'
+   else 'fail'
+END as grade
+from students;
+
+
+
+
+*********** interview Question 
+given tree with columns as node,parent 
+add new column with 'type'
+as name dtermines Root or leaf or inner 
+
+
+Select *,
+CASE
+   WHEN praent is NULL 'root'
+   WHEN node NOT IN (select distinct parent from tree where parent is not NULL)  'leaf'
+   else 'inner'
+END as type
+from students;
+
+
+
+
+
+
+JOINS::
+Inner joins are costlies than the Left or Right Joins .....
+
+
+CROSS JOIN :
+
+if table 1 has 5 rows tbl2 3 rows 
+after joining we get 15 rows 
+
+
+Inner Join : only common in the both tables will get merged 
+
+
+Tb1,Tb2 
+
+joining 
+
+left join :: 
+1.all those records match happened with right table those columns
+will get merged to left side table 
+2.
+
+
+sELECT * FROM
+tab1
+left join tb2
+on tab1.col1=tab2.col7;
+
+
+
+Right Join::
+
+Query :
+sELECT * FROM
+tab1
+right join tb2
+on tab1.col1=tab2.col7;
+
+
+FULL OUTER JOIN :
+
+
+Select * 
+from tab1
+full outer join tab2
+on tab1.col1=tab2.col8;
+
+
+
+
+Cross Join:: if tab1 having n and tab2 having m 
+in output u will get n*m
+
+** doesnt requires any conditions 
+
+Select * 
+from tab1
+cross join tab2;
+
+********* by default Join is consider as InnerJoin
+*******
+Self Join::::  (we needto give the Alias name to our table and make 2 alias names and merge the 2 tables as per conditions )
+
+employee table::
+
+
+id     name        managerId
+1      praneeth     2
+2      nattu        4
+3      rat          2 
+4     andan
+
+
+
+write a query to show the manager name for each employee 
+output columns contains id,name,managerId,manager_name
+
+
+Select emp.id,emp.name as employye_name,
+emp.managerId, mang.name as manager_name
+from employee  emp
+join employee mang
+ON emp.id= mang.managerId
+
+
+
+
+Merging 3 or more tables::: By creating  Alias names  we wont get errors if the same column name is present in the mutliple tables ....
+
+
+Select 
+t1.*,
+t2.*,
+t3.*
+from tab1 t1
+Inner Join  tab2 t2   ON t1.col1=t2.col1                          
+Inner Join  tab3 t3   ON t2.col4=t3.col5;
+
+
+
+
+
+Group by Roll Up ::
+
+**** In one single query it shows all the possible groupby combinations ...
+
+
+Example ::
+
+
+My table customer having the column names (amount , date, store_id )
+Select SUM (amount),
+Year(Date) as Year
+from customer 
+groupby Year(Date), store_id with ROLLUP
+orderby Year(Date),store_id ;
+
+
+
+VIEWS :::  (no memory will get occupied by the virtual table)
+*** Views are the virtual tables hides the original information in the table and provides the which info end user need to be used that it will him to use 
+
+Consider we having the table employee where we having the data of his personal information like PAN details ,nominne details ,contact number etc ...
+Financial team wants the data of his salry and his experince kind of info then we will make the use VIEWS
+
+
+SYNTAX::
+
+Create View view_income_details_table AS
+Select name,income
+from employy;
+
+This creates one virtual table ...
+
+Select * from view_income_details_table;   (to view the table on every call it executes the above Query )
+drop view view_income_details_table   (drops the virtual table )
+
+ 
+
+
+
+student(stu_name,stu_id),course(co_id,co_name),enrollment(stu_id,co_id)
+
+Q: find the students who are enrolled in any courses taken by 'john'
+
+step 1 : get all course_id  where john got registered courses  
+
+Select 
+en.co_id,
+from enrollment en
+left join student st ON en.stu_id=st.stu_id
+where st.stu_name ='john';
+
+Step 2:
+
+select DISTINCT(s.stu_name) 
+from student s
+left join enrollment e on e.stu_id=s.stu_id
+where e.co_id=ANY(Select 
+en.co_id,
+from enrollment en
+left join student st ON en.stu_id=st.stu_id
+where st.stu_name ='john')AND s.stu_name <> 'John';
+
+
+***the below query give the table students who enrolled the couses with name, course_name,id,co_id
+Select en.stu_id,
+en.co_id,
+st.stu_name ,
+co.co_name
+from enrollment en
+left join student st
+left join course co
+
+
+
+(*** check in Detail)
+EXIST (Lookup operation ) returns only true or false 
+
+*** In Runtime if it find any true Event then it stops running and return the True value .
+
+** more efficeint than the JOIN operation 
+
+
+customer(customer_id,customer_name),order(order_id,order_date,c_id)
+Q1 :find the customers who placed atleast one order
+ 
+ SELECT c.customer_name
+ FROM  customer c 
+ WHERE EXISTS (
+ SELECT o.order_id
+ FROM order
+ where o.c_id=c.customer_id
+ )
+ 
+ 
+ 
+ 
+ *******************************************************************ADVANCED SQL*****************************************************************************************
+ 
+ 
+ WINDOW FUNCTIONS ::
+ 
+ 
+ shop_data(shop_id,sales_amount,date)
+ 
+ SELECT * 
+ FROM shop_data sum(sales_amount) OVER (PARTITION BY shop_id )as total_sum_sales;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

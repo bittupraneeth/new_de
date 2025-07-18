@@ -1,0 +1,121 @@
+base) bittupraneeth@bittupraneeth:~$ sudo docker start my_mysql
+my_mysql
+(base) bittupraneeth@bittupraneeth:~$ sudo docker run --name my_mysql2 -e MYSQL_ROOT_PASSWORD=1234 -d mysql:8.0
+6b04bf516023d2a845ae65fb9af33e36f44a5a2a7eca0151c4bef8947692f94f
+(base) bittupraneeth@bittupraneeth:~$ sudo docker exec -it my_mysql mysql -u root -p
+Enter password: 
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 8
+Server version: 8.0.41 MySQL Community Server - GPL
+
+Copyright (c) 2000, 2025, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> 
+
+
+
+
+to open the Hive :
+sudo docker compose up -d   It will raise all the images ....hive ,hadoop,
+
+sudo docker exec -it docker-hive_hive-server_1 bash
+beeline -u jdbc:hive2://localhost:10000
+
+
+CREATE EXTERNAL TABLE IF NOT EXISTS car_ins_data (
+    Id INT,
+    Age INT,
+    Job STRING,
+    Marital STRING,
+    Education STRING,
+    Default INT,
+    Balance INT,
+    HHInsurance INT,
+    CarLoan INT,
+    Communication STRING,
+    LastContactDay STRING,
+    LastContactMonth STRING,
+    NoOfContacts INT,
+    DaysPassed INT,
+    PrevAttempts INT,
+    Outcome STRING,
+    CallStart STRING,
+    CallEnd STRING,
+    CarInsurance INT
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+LOCATION '/user/hive/warehouse/insurance_data'
+TBLPROPERTIES ("skip.header.line.count"="1");
+
+
+
+
+
+
+
+
+
+Open the following URLs in your browser:
+
+Component	           URL
+Hadoop NameNode UI	http://localhost:9870
+Spark Master UI 	http://localhost:8080
+Jupyter Notebook	http://localhost:8888---->sudo docker exec -it jupyter jupyter notebook list   (u will get the token)
+history Server :
+From anywhere inside the spark-master container, run the full path to the Spark class:
+Run this ..
+/opt/bitnami/spark/bin/spark-class org.apache.spark.deploy.history.HistoryServer
+Give the Permission to read logs from Host to History Server :
+sudo chmod -R 777 ~/Hadoop-Docker-Spark-Sql-Hive-Data-Integration-and-Warehousing-Project/spark-events
+
+
+
+
+Hive :
+sudo docker exec -it hive-server bash
+beeline -u jdbc:hive2://localhost:10000
+
+To test Spark inside the Spark Master container:
+
+sudo docker exec -it spark-master bash
+spark-shell
+
+
+
+
+
+docker image::
+
+https://github.com/Mouhamed-Jinja/Hadoop-Docker-Spark-Sql-Hive-Data-Integration-and-Warehousing-Project.git
+
+Spark UI 
+http://localhost:8080
+
+
+
+history Server :
+From anywhere inside the spark-master container, run the full path to the Spark class:
+Run this ..
+/opt/bitnami/spark/bin/spark-class org.apache.spark.deploy.history.HistoryServer
+Give the Permission to read logs from Host to History Server :
+sudo chmod -R 777 ~/Hadoop-Docker-Spark-Sql-Hive-Data-Integration-and-Warehousing-Project/spark-events
+
+
+
+
+
+
+
+to view the messages in the kafka :
+after enetering the Kafka container
+kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic transactions --from-beginning
+
+
