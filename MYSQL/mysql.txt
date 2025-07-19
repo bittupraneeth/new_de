@@ -172,7 +172,7 @@ groupby age;
 
 HAVING :
 Having Can only used when we are using groupby 
-*******
+*******  ****
 Select command will execute at the end of the query just it shows the result so it executes at the last .....
 
 
@@ -278,7 +278,7 @@ where all customers is from same country  as the supplier?
 
 
 customer_data (cust_id,cust_name,cust_country,supp_id)
-supplier_data(supplier_data,supplier_country)
+supplier_data(supplier_id,supplier_country)
 
 
 
@@ -514,6 +514,10 @@ left join course co
 (*** check in Detail)
 EXIST (Lookup operation ) returns only true or false 
 
+***EXISTS executes once per row of the outer query.
+                |
+                |
+               < >
 *** In Runtime if it find any true Event then it stops running and return the True value .
 
 ** more efficeint than the JOIN operation 
