@@ -283,6 +283,7 @@ supplier_data(supplier_id,supplier_country)
 
 
 
+
 SELECT * 
 FROM customer_data 
 WHERE cust_country = (
@@ -534,9 +535,15 @@ Q1 :find the customers who placed atleast one order
  FROM order
  where o.c_id=c.customer_id
  )
+ EXECUTION OREDR
  
- 
- 
+  FROM
+2. WHERE
+3. GROUP BY
+4. HAVING
+5. SELECT
+6. WINDOW FUNCTIONS
+7. ORDER BY
  
  *******************************************************************ADVANCED SQL*****************************************************************************************
  
