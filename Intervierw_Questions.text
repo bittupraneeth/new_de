@@ -1,0 +1,62 @@
+MYSQL:
+
+
+
+
+
+SPARK:
+
+
+
+
+
+DATABRICICKS:
+
+1. How do you handle schema evolution in a data lake environment?
+
+
+
+
+
+
+
+
+
+
+DATA MODELING :
+* Surrogate KEY ::
+                  A Surrogate Key is an artificial (system-generated) unique ID given to each row in a dimension table.
+                  It has no business meaning.
+
+                  
+                  | surrogate_key | customer_id | city      | start_date | end_date   | is_current |
+                  | ------------- | ----------- | --------- | ---------- | ---------- | ---------- |
+                  | 101           | C1          | Bangalore | 2024-01-01 | 2025-01-01 | N          |
+                  | 205           | C1          | Hyderabad | 2025-01-01 | null       | Y          |
+                  
+
+ 
+ * How would you design a slowly changing dimension (SCD) pipeline that supports Type 1 and Type 2 updates at high scale?
+Answer:
+Basicsally SCD are Slowly changing Dimension Tables  will store the Metainfo(info about the data ).
+Based on the sitaution we chood the SCD 1 or Scd2 
+if we need all the past changes in the Dimension Tables we use SCD 2 
+where SCD2 will be having the 3 extra columns start_date,end_date,valid(Y/N)
+
+
+SCD1 Directly replaces the previously existing record it wont store any history ....
+
+I can impleent SCD2 in the Spark for more clarity ...
+
+
+
+Scenario Based Questions:
+
+
+
+
+
+
+
+
+
