@@ -11,6 +11,57 @@ SPARK:
 
 
 DATABRICICKS:
+### 
+Difference between Auto Loader and Event Hubs — in what scenarios would you choose one over the other?
+Answer:
+      Event Hubs is a like Kafka 
+      | Feature   | Auto Loader                        | Event Hubs                |
+      | --------- | ---------------------------------- | ------------------------- |
+      | Type      | File ingestion mechanism           | Streaming event broker    |
+      | Platform  | Databricks                         | Azure                     |
+      | Data Type | Files (JSON, CSV, Parquet, etc.)   | Real-time events/messages |
+      | Nature    | Micro-batch streaming from storage | True event streaming      |
+      | Use Case  | Landing zone ingestion             | Real-time event pipelines |
+      
+    Autoloader:
+      1.Basically Autoloader is built on top of SPARK API .
+      2. Optimized File Reading
+      3. It is the most effiicient way of ingesting data into the Databricks from any cloud like ADLS , S3 ,Google storage and all  (because it is designed in such a way that with minimal calls Data will get stored)
+      4. if any new file landed in the cloud storage it directly triggers
+      df = (
+              spark.readStream
+                  .format("cloudFiles")
+                  .option("cloudFiles.format", "csv")
+                  .option("cloudFiles.inferColumnTypes", "true")
+                  .option("cloudFiles.schemaLocation", schema_path)
+                  .load(input_path)
+          )
+
+      5. More Suitable in Batch wise Processing
+                                              
+                                              
+    Coming to the Event Hubs :
+    1. if we get continous data and our data is Real Streaming we use this 
+####
+You receive files daily in ADLS. How would you automatically detect file arrival and identify corrupt files without stopping ingestion?
+
+Anwer:
+
+        df = (
+        spark.readStream
+            .format("cloudFiles")
+            .option("cloudFiles.format", "json")
+            .option("cloudFiles.schemaLocation", "dbfs:/schemas/")
+            .option("cloudFiles.schemaEvolutionMode", "addNewColumns")
+            .option("badRecordsPath", "dbfs:/bad_records/")
+            .load("abfss://raw@storageaccount.dfs.core.windows.net/data/")
+    )
+     I use Autooader for this when their is any schema evolution(mismatch) happens
+     badrecords are stored in the badRecordsPath and it will be used for further inspection .
+
+     and while storing we can use mergeschema =True in the Bronze layer 
+     
+
 
 1. How do you handle schema evolution in a data lake environment?
 
