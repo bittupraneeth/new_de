@@ -1,16 +1,50 @@
 MYSQL:
+### Difference between the ROW_NUMBER, DENSE_RANK(),RANK()
+Answer: 
+      1. These 3 are used when we use window functions in the MYSQL 
+      2. lets take one example easy to exaplin as well 
+      if we do partition BY and OrderBY age .
+            Row_number: Gives unique sequential numbers (Top 1 per group)
+                        No two rows get the same number
+            Rank():
+                  Same values get same rank
+                  But ranking will have gaps
+            DENSE_RANK():
+                        Same values get same rank
+                        But ranking will NOT have gaps
 
-
-
-
-
+            Complexity: ROW_NUMBER==DENSE_RANK()<RANK()
 SPARK:
-
+#### What is the difference between partitioning and bucketing in big data systems, and when would you prefer one over the other?
+Answer: 
+      When to Use Bucketing
+      Use when:
+            High cardinality column
+            Frequent joins on that column
+            Want to optimize shuffle during joins
+            Example:
+             Joining two large tables on user_id.
+            If both tables are bucketed on user_id with same number of buckets: Suffling will be less 
+      Partitioning:
+            Column has low cardinality
+            Frequently used in filters
+            Used in WHERE clause
+            Partition pruning
+            Reduces data scan
+            Good for time-based data
+            
 
 
 
 
 DATABRICICKS:
+### Difference between the Delta Table and Delta Lake :
+Answer:
+      A table stored in Delta format using Delta Lake.
+      Delta Lake is a storage framework built on top of data lakes (like S3, ADLS, HDFS).
+      ACID transactions,Schema enforcement,Schema evolution,Time travel,Upserts (MERGE),Data versioning
+
+
 ### 
 Difference between Auto Loader and Event Hubs — in what scenarios would you choose one over the other?
 Answer:
@@ -87,21 +121,119 @@ DATA MODELING :
                   
 
  
- * How would you design a slowly changing dimension (SCD) pipeline that supports Type 1 and Type 2 updates at high scale?
+ #### How would you design a slowly changing dimension (SCD) pipeline that supports Type 1 and Type 2 updates at high scale?
 Answer:
 Basicsally SCD are Slowly changing Dimension Tables  will store the Metainfo(info about the data ).
 Based on the sitaution we chood the SCD 1 or Scd2 
 if we need all the past changes in the Dimension Tables we use SCD 2 
 where SCD2 will be having the 3 extra columns start_date,end_date,valid(Y/N)
-
-
 SCD1 Directly replaces the previously existing record it wont store any history ....
 
+For High Scale Data : 
+                  1. I use Hash function for the SCD type 2 columns 
+                  2. While Joining I only Join the Current_values Yes .
 I can impleent SCD2 in the Spark for more clarity ...
 
+### Implement SCD type 2 in the SPARK :
+            from pyspark.sql import SparkSession
+            from pyspark.sql.functions import (col, lit, current_date, expr)
 
+           
+            
+            # 1. Spark Session
+             # -------------------------------------------------------
+            spark = SparkSession.builder.appName("SCD_Type_2_Customer").getOrCreate()
+            
+            # 2. Read Source (daily incoming data)
+            # -------------------------------------------------------
+            src_df = spark.read.parquet("/source/customer") 
+            # Expected columns:
+            # customer_id, name, city, phone
+            # 3. Read Target Dimension Table
+            tgt_df = spark.read.parquet("/dim/customer")
+            # Expected columns:
+            # customer_id, name, city, phone, start_date, end_date, is_current
+            # 4. Filter current records from target
+            # -------------------------------------------------------
+            tgt_current_df = tgt_df.filter(col("is_current") == "Y")
+            # -------------------------------------------------------
+            
+            # 5. Join source with current target
+            # -------------------------------------------------------
+            
+            join_df = src_df.alias("src").join(tgt_current_df.alias("tgt"), on="customer_id", how="left")
+            
+            # ------------------------------------------------------
+            # 6. Change detection logic
+            # -------------------------------------------------------
+            change_condition = ((col("src.name") != col("tgt.name")) |(col("src.city") != col("tgt.city")) |(col("src.phone") != col("tgt.phone")))
+            
+            # -------------------------------------------------------
+            
+            # 7. Expire old records (changed records)
+            
+            # -------------------------------------------------------
+            
+            expired_df = join_df.filter(change_condition & col("tgt.customer_id").isNotNull()).select( col("tgt.customer_id"),col("tgt.name"),col("tgt.city"),col("tgt.phone"),col("tgt.start_date")
+).withColumn("end_date", current_date() - expr("INTERVAL 1 DAY")).withColumn("is_current", lit("N"))
+            # 8. New records (new customers + changed customers)
+            new_df = join_df.filter(change_condition | col("tgt.customer_id").isNull()).select(col("src.customer_id"),col("src.name"),col("src.city"),col("src.phone")).withColumn("start_date", current_date() ).withColumn("end_date", lit("9999-12-31")).withColumn("is_current", lit("Y"))
+            # 9. Unchanged records
+            
+            # -------------------------------------------------------
+             unchanged_df = tgt_current_df.join(
+            
+                expired_df.select("customer_id"),
+            
+                on="customer_id",
+            
+                how="left_anti"
+            
+            )
+            final_dim_df = unchanged_df.unionByName(expired_df).unionByName(new_df)
+ 
 
 Scenario Based Questions:
+
+###  Explain how you would build a near real-time ingestion system for millions of events per minute. Which components would you choose and why?
+Answer :
+            Producers → Kafka → Spark Structured Streaming → Delta Lake → BI / ML / APIs
+
+            1.Fault Tolerance is also acheived by Spark Structured Streaming .
+            2.If Spark goes it restarts from the last commited offset  that is maintained through the checkpointing the spark 
+            3.even kafka also maintains the consumer group offset but spark wont rely on top of it itself maintains through checkpointing 
+##### You have a pipeline that runs every hour, but the downstream table shows duplicate records. Walk through your debugging approach 
+step by step.
+
+Answer:
+            1. Checkpoint folder deleted
+            2. Consumer group changed
+            3. startingOffsets = earliest
+            4. producer is sending the same records or what if yes I addd watermarking 
+            5. creating the primary key in the delta table 
+            6.Is offset committed only after successful write
+            First, I would identify the type of duplicates and check whether they originate from source or processing.
+            If it’s streaming, I would verify checkpointing and offset handling. 
+            If it’s batch, I would check whether incremental logic is missing.
+            I would then validate whether writes are append-only instead of merge-based. 
+            Finally, I would ensure idempotency using event_id-based deduplication and Delta MERGE to prevent future duplicates.
+
+### How would you design a data model for storing large-scale logs that need fast write speed and moderately fast reads?
+
+Since we need the high write and moderate read we can use writing into parquet or DELTA lake unlike the any Database like
+(CASSANDRA,mongoDB since here both write and read faster ) and not any Datawarehouse(not suitable for faster writes)
+so we can use the HDFS or Delta Lake and write the data in the append 
+and while storing the data we can make it partitions wrt yr/mt/dt so that read is also good performance assuming it is time related data 
+ ####Describe how you handle schema evolution in a production pipeline. What happens if a producer adds a new column unexpectedly?
+ Anwer:
+            In  production, I separate schema flexibility and schema enforcement using a Medallion architecture.
+            In the Bronze layer, I allow schema evolution using mergeSchema or Auto Loader’s addNewColumns mode so ingestion never fails. 
+            In the Silver layer, I enforce a strict schema and validate data types.
+            If a new column is added, I log and review it before propagating downstream. 
+            If a datatype changes unexpectedly, I treat it as a schema violation and either quarantine those records or alert upstream producers. This ensures robustness and prevents silent data corruption.
+            
+            
+            
 
 
 
