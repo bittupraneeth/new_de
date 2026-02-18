@@ -32,6 +32,26 @@ Answer:
             Partition pruning
             Reduces data scan
             Good for time-based data
+
+#### You need to join two tables with a big size difference: one is 2 TB, the other is 200 MB. How would you optimize this join?
+Answe: 
+            1. Brodcast Join
+            2. if No 
+            large_df = spark.read.parquet("/data/large_2tb_table")
+            small_df = spark.read.parquet("/data/small_200mb_table")
+            
+            num_partitions = 2000
+            
+            large_df = large_df.repartition(num_partitions, col("join_key"))
+            small_df = small_df.repartition(num_partitions, col("join_key"))
+            
+            joined_df = large_df.join(
+                small_df,
+                on="join_key",
+                how="inner"
+            )
+
+
             
 
 
@@ -224,6 +244,7 @@ Since we need the high write and moderate read we can use writing into parquet o
 (CASSANDRA,mongoDB since here both write and read faster ) and not any Datawarehouse(not suitable for faster writes)
 so we can use the HDFS or Delta Lake and write the data in the append 
 and while storing the data we can make it partitions wrt yr/mt/dt so that read is also good performance assuming it is time related data 
+
  ####Describe how you handle schema evolution in a production pipeline. What happens if a producer adds a new column unexpectedly?
  Anwer:
             In  production, I separate schema flexibility and schema enforcement using a Medallion architecture.
