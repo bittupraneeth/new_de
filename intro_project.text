@@ -9,3 +9,43 @@ Answer:
 5. I also have strong experience in Kafka and Spark Structured Streaming, where I worked on real-time ingestion and processing pipelines.
 6. On the storage side, I have worked with Cassandra and MongoDB
 7. I have hands-on experience in data modeling and performance optimization.
+
+
+
+
+
+Project :
+
+
+1. I work on the TowerGenie Analytics Platform at Jio, where we process telemetry data from 35+ lakh telecom towers. Each tower has DG, battery, grid, and solar assets generating 3+ billion records daily.
+
+2. We receive raw telemetry data from the upstream DAP team in HDFS, partitioned by asset and date:
+        We built scalable Spark ETL pipelines where each asset is processed independently.
+        During ETL, we implemented 8–10 data quality checks, such as:
+        Invalid meter readings
+        Negative energy values
+        Timestamp mismatches
+        Missing tower IDs
+        Sudden spikes beyond thresholds
+        Towers failing these checks are marked as bad-quality towers and reported to the engineering team.
+        Only clean and validated data is passed to the analytics layer.
+We store aggregated data in Cassandra for low-latency access and publish curated datasets to MySQL for Superset dashboards.
+3. Analytics Layer
+After ETL, we developed an analytical Spark application that computes KPIs at multiple levels:
+    Hourly
+    Daily
+    Monthly
+    Division level
+    State level
+    Pan-India level
+    Example KPIs include:
+    DG energy consumption
+    Solar and grid energy usage
+    Faulty DG or solar sites
+    Tower-level energy efficiency metrics
+4. The aggregated results are written to Cassandra for fast reads.
+From Cassandra, we use a Python-based data dump process to move curated data into MySQL, which is connected to Apache Superset.
+We have built 7–8 live T-1 dashboards, which are actively used by business and operations teams.
+5. The pipelines are orchestrated using Airflow with monitoring and alerting mechanisms.
+
+This platform helps engineering teams detect faulty assets, energy theft, and performance inefficiencies.
