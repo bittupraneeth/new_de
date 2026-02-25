@@ -14,6 +14,17 @@ Answer:
                         But ranking will NOT have gaps
 
             Complexity: ROW_NUMBER==DENSE_RANK()<RANK()
+
+###MYSQL Execution order
+1.FROM
+2️⃣ JOIN
+3️⃣ WHERE
+4️⃣ GROUP BY
+5️⃣ HAVING
+6️⃣ SELECT (rAnk ALSO COMES HERE ONLYY)
+7️⃣ DISTINCT
+8️⃣ ORDER BY
+9️⃣ LIMIT
 SPARK:
 #### What is the difference between partitioning and bucketing in big data systems, and when would you prefer one over the other?
 Answer: 
@@ -32,6 +43,32 @@ Answer:
             Partition pruning
             Reduces data scan
             Good for time-based data
+### Difference between the repartition and coalasce
+            Repartition: will do the full shuffle 
+                        Can increase and decrease the shuffles 
+                        used when all the data of same order needs to be in the same partition
+                        equal distribution happens here ..
+            Coalasce:
+                        cheaper operation than the repartition 
+                        can only decrease the no of partiotions 
+                        used when we need to store the output to minimal no of partitions 
+                        will also cause uneven distribution
+                        
+
+### Difference between the cache and the persist
+
+            Cache: 
+                  cached dfs are stored at the memory level only 
+            Persit : can be done in multiple ways 
+                     Allows choosing the storage level 
+                     (MEMORY_ONLY,MEMORY_AND_DISK,DISK_ONLY,MEMORY_ONLY_SER)
+
+
+### How do you handle the lately coming the data.
+
+            df.withWatermark("event_time", "5 minutes") \
+                  .groupBy(window("event_time", "10 minutes")) \
+                    .count()
 
 #### You need to join two tables with a big size difference: one is 2 TB, the other is 200 MB. How would you optimize this join?
 Answe: 
@@ -51,8 +88,10 @@ Answe:
                 how="inner"
             )
 
-
-            
+### How would you detect and handle duplicate records while ingesting streaming data using PySpark or Apache Kafka?
+dedup_df = parsed_df \
+    .withWatermark("event_time", "10 minutes") \
+    .dropDuplicates(["event_id"])
 
 
 
@@ -63,6 +102,26 @@ Answer:
       A table stored in Delta format using Delta Lake.
       Delta Lake is a storage framework built on top of data lakes (like S3, ADLS, HDFS).
       ACID transactions,Schema enforcement,Schema evolution,Time travel,Upserts (MERGE),Data versioning
+## Difference between the data lake and the data warehouse 
+
+
+| Feature           | Data Lake                       | Data Warehouse           |
+| ----------------- | ------------------------------- | ------------------------ |
+| Data Type         | Raw (any format)                | Structured               |
+| Schema            | Schema-on-Read                  | Schema-on-Write          |
+| Purpose           | Storage + Processing            | Analytics + Reporting    |
+| Users             | Data Engineers, Data Scientists | Analysts, Business Users |
+| Cost              | Low                             | Higher                   |
+| Query Performance | Slower (needs processing)       | Faster for analytics     |
+| Example           | Raw logs, JSON, IoT data        | Sales summary table      |
+
+
+
+#### what is data lake :?
+A Data Lake is a centralized storage system that stores raw data in its original format — structured, semi-structured, or unstructured.
+
+
+
 
 
 ### 
@@ -119,15 +178,8 @@ Anwer:
 
 1. How do you handle schema evolution in a data lake environment?
 
-
-
-
-
-
-
-
-
-
+            ** spark.read.option("mergeSchema", "true").parquet("path")
+            
 DATA MODELING :
 * Surrogate KEY ::
                   A Surrogate Key is an artificial (system-generated) unique ID given to each row in a dimension table.
@@ -254,7 +306,73 @@ and while storing the data we can make it partitions wrt yr/mt/dt so that read i
             If a datatype changes unexpectedly, I treat it as a schema violation and either quarantine those records or alert upstream producers. This ensures robustness and prevents silent data corruption.
             
             
-            
+### how do you handloe the schema evolution in the Avro,parquet and the json
+
+      In Avro, schema evolution is managed through writer and reader schemas, usually with a Schema Registry, ensuring backward compatibility.
+      In Parquet, schema is stored in file metadata, and new columns can be added, with schema merging enabled during reads.
+      JSON is schema-less,so we enforce schema explicitly during ingestion to avoid inconsistencies.
+      In production, we carefully manage type changes and use tools like Delta Lake or Iceberg for safer evolution.
+      
+      | Feature            | Avro       | Parquet   | JSON              |
+      | ------------------ | ---------- | --------- | ----------------- |
+      | Schema Stored      | Yes        | Yes       | No                |
+      | Schema Enforcement | Strong     | Moderate  | None              |
+      | Add Column         | Safe       | Safe      | Naturally handled |
+      | Remove Column      | Safe       | Safe      | Naturally handled |
+      | Type Change        | Restricted | Risky     | Runtime issues    |
+      | Best Use           | Streaming  | Analytics | Raw ingestion     |
+
+      JSON: spark.read.schema(predefined_schema).json("path")
+      Parquet: spark.read.option("mergeSchema", "true").parquet("path")
+      AVRO : Schema is stored with the data (or in Schema Registry)
+            writer schema , reader schema stored seperately ..
+      
+
+Uses writer schema and reader schema
+
+
+** check the schema registory part..
+
+
+
+### how do you handle the schema evolution inthe Data warehouses like snowflake and redshioft
+
+            * will be using the alter commands in case of the to add the new columns
+            * for renaming column or changing datatype I will create the new column and backfill the data ..]
+            * mostly I will try to drop the table .
+            if it is mandatory I will do ->Create new column with correct type 
+                                          Migrate data gradually
+
+### How do you makesure that ur datawarehouse is not having the Duplicats 
+
+            1. ✅ Primary Key Constraints
+            2. If Duplicates exists.->use merge statements instead of direct insert statements.
+            3.use the merge statements instead of directly inserting the records .
+
+                  MERGE INTO sales t
+                  USING staging_sales s
+                  ON t.order_id = s.order_id
+                  
+                  WHEN MATCHED THEN
+                      UPDATE SET
+                          t.amount = s.amount,
+                          t.updated_at = s.updated_at
+                  
+                  WHEN NOT MATCHED THEN
+                      INSERT (order_id, amount, updated_at)
+                      VALUES (s.order_id, s.amount, s.updated_at);
+
+## what is the role of t he of dataengineers.in OLAP to OLTP 
+            OLTP Database → ETL/ELT → Data Lake/Warehouse (OLAP)
+
+            Data Engineers:
+            Extract data from OLTP systems
+            Transform and clean data
+            Load into OLAP systems
+            Optimize for analytics
+
+
+
 
 
 
