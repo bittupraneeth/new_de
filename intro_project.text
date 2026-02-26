@@ -16,20 +16,18 @@ Answer:
 
 Project :
 
+1. I work on the TowerGenie Analytics Platform at Jio.
+We process telemetry data from 35+ lakh telecom towers across India.
+Each tower has DG, battery, grid, and solar assets generating around 3+ billion records daily.”
 
-1. I work on the TowerGenie Analytics Platform at Jio, where we process telemetry data from 35+ lakh telecom towers. Each tower has DG, battery, grid, and solar assets generating 3+ billion records daily.
+2.We receive raw telemetry data from the upstream DAP team in HDFS, partitioned by asset and date.
+I built scalable Spark ETL pipelines where each asset is processed independently 
+to ensure horizontal scalability.
+During ETL, we implemented 8–10 data quality checks such as
 
-2. We receive raw telemetry data from the upstream DAP team in HDFS, partitioned by asset and date:
-        We built scalable Spark ETL pipelines where each asset is processed independently.
-        During ETL, we implemented 8–10 data quality checks, such as:
-        Invalid meter readings
-        Negative energy values
-        Timestamp mismatches
-        Missing tower IDs
-        Sudden spikes beyond thresholds
-        Towers failing these checks are marked as bad-quality towers and reported to the engineering team.
-        Only clean and validated data is passed to the analytics layer.
-We store aggregated data in Cassandra for low-latency access and publish curated datasets to MySQL for Superset dashboards.
+**Towers failing these validations are flagged and reported to the engineering team.
+Only clean and validated data flows into the analytics layer.
+
 3. Analytics Layer
 After ETL, we developed an analytical Spark application that computes KPIs at multiple levels:
     Hourly
