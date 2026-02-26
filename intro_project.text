@@ -46,4 +46,10 @@ From Cassandra, we use a Python-based data dump process to move curated data int
 We have built 7–8 live T-1 dashboards, which are actively used by business and operations teams.
 5. The pipelines are orchestrated using Airflow with monitoring and alerting mechanisms.
 
+40 GB size .
+--num-executors 20
+--executor-cores 4
+--executor-memory 16G
+--conf spark.sql.shuffle.partitions=400
+
 This platform helps engineering teams detect faulty assets, energy theft, and performance inefficiencies.
