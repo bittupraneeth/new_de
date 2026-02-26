@@ -15,6 +15,15 @@ Answer:
 
             Complexity: ROW_NUMBER==DENSE_RANK()<RANK()
 
+### 1NF, 2NF 3NF
+            | Normal Form | Removes               | Main Rule                    |
+            | ----------- | --------------------- | ---------------------------- |
+            | 1NF         | Repeating groups      | Atomic values only           |
+            | 2NF         | Partial dependency    | Full dependency on whole key |
+            | 3NF         | Transitive dependency | Non-key depends only on PK   |
+            ALL the OLTP design will use the 3 NF .
+
+
 ###MYSQL Execution order
 1.FROM
 2️⃣ JOIN
@@ -37,6 +46,7 @@ Answer:
              Joining two large tables on user_id.
             If both tables are bucketed on user_id with same number of buckets: Suffling will be less 
       Partitioning:
+            Splits data on base of column values .
             Column has low cardinality
             Frequently used in filters
             Used in WHERE clause
@@ -184,6 +194,7 @@ DATA MODELING :
 * Surrogate KEY ::
                   A Surrogate Key is an artificial (system-generated) unique ID given to each row in a dimension table.
                   It has no business meaning.
+                  Mostly used in the Dimentional tables .
 
                   
                   | surrogate_key | customer_id | city      | start_date | end_date   | is_current |
@@ -249,7 +260,8 @@ I can impleent SCD2 in the Spark for more clarity ...
             expired_df = join_df.filter(change_condition & col("tgt.customer_id").isNotNull()).select( col("tgt.customer_id"),col("tgt.name"),col("tgt.city"),col("tgt.phone"),col("tgt.start_date")
 ).withColumn("end_date", current_date() - expr("INTERVAL 1 DAY")).withColumn("is_current", lit("N"))
             # 8. New records (new customers + changed customers)
-            new_df = join_df.filter(change_condition | col("tgt.customer_id").isNull()).select(col("src.customer_id"),col("src.name"),col("src.city"),col("src.phone")).withColumn("start_date", current_date() ).withColumn("end_date", lit("9999-12-31")).withColumn("is_current", lit("Y"))
+            new_df = join_df.filter(change_condition | col("tgt.customer_id").isNull()).select(col("src.customer_id"),col("src.name"),col("src.city"),col("src.phone")).
+            withColumn("start_date", current_date() ).withColumn("end_date", lit("9999-12-31")).withColumn("is_current", lit("Y"))
             # 9. Unchanged records
             
             # -------------------------------------------------------
@@ -339,7 +351,7 @@ Uses writer schema and reader schema
 
             * will be using the alter commands in case of the to add the new columns
             * for renaming column or changing datatype I will create the new column and backfill the data ..]
-            * mostly I will try to drop the table .
+            * mostly I will try to drop the column .
             if it is mandatory I will do ->Create new column with correct type 
                                           Migrate data gradually
 
