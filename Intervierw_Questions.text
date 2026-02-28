@@ -53,6 +53,29 @@ Answer:
             Partition pruning
             Reduces data scan
             Good for time-based data
+### Difference between the RDD and Dataframe :
+Answer: 
+            1. RDD is fundamental datastructure of SPARK 
+            2. DATAFRAME :well built so that using df Spark has abilitly to understand the Data 
+                        | Feature           | RDD        | DataFrame  | Dataset         |
+                        | ----------------- | ---------- | ---------- | --------------- |
+                        | Abstraction Level | Low        | High       | High            |
+                        | Schema            | ❌ No       | ✅ Yes      | ✅ Yes           |
+                        | Optimization      | ❌ No       | ✅ Catalyst | ✅ Catalyst      |
+                        | Type Safety       | ❌          | ❌          | ✅ (Scala only)  |
+                        | Performance       | Slower     | Fast       | Fast            |
+                        | API Style         | Functional | SQL-like   | Object-oriented |
+
+                        **** ULIMATELY ALL RUN in RDDs only in Background 
+### ACCUMULATORS:
+ANSWER::
+            Accumulators are write-only shared variables used to aggregate information across executors and send it back to the driver.
+            
+            👉 Executors can add/update
+            👉 Driver can read
+            👉 Executors cannot read accumulator value
+
+            
 ### Difference between the repartition and coalasce
             Repartition: will do the full shuffle 
                         Can increase and decrease the shuffles 
@@ -98,10 +121,52 @@ Answe:
                 how="inner"
             )
 
-### How would you detect and handle duplicate records while ingesting streaming data using PySpark or Apache Kafka?
-dedup_df = parsed_df \
-    .withWatermark("event_time", "10 minutes") \
-    .dropDuplicates(["event_id"])
+### How will you Join 2 Big Tables each of 2 TB each .?
+Answer :
+            df_orders = spark.read.parquet("s3://path/orders")
+            df_customers = spark.read.parquet("s3://path/customers")
+            df_orders = df_orders.repartition(2000, "customer_id")
+            df_customers = df_customers.repartition(2000, "customer_id")
+            
+            Spark automatically chooses sort-merge join if:
+            
+            joined_df = df_orders.join(
+                df_customers,
+                on="customer_id",
+                how="inner"
+            )
+### How will You handle the Skewness in the data while Joining .
+Answer :
+            1. Enabling AQE 
+                  Spark observes real shuffle data
+                  Adjusts join type
+                  Fixes skew
+                  Merges small partitions
+            2. Salting Tecnique 
+                        df_orders = spark.read.parquet("s3://data/orders")
+                        df_customers = spark.read.parquet("s3://data/customers")
+                        num_salts = 10
+                        df_orders_salted = df_orders.withColumn("salt",  floor(rand() * num_salts))
+                        salt_list = [lit(i) for i in range(num_salts)]
+                        df_customers_expanded = df_customers.withColumn("salt",explode(array(*salt_list)))
+                        
+                        df_joined = df_orders_salted.join(df_customers_expanded,on=["customer_id", "salt"],how="inner")
+                        df_final = df_joined.drop("salt")
+
+### How would you detect and handle duplicate records and lately handling data while ingesting streaming data using PySpark or Apache Kafka?
+
+                  1. dedup_df = parsed_df \
+                      .withWatermark("event_time", "10 minutes") \
+                      .dropDuplicates(["event_id"])
+                  2. WaterMark:
+                        A watermark defines how late data is allowed to arrive before Spark considers a window complete.
+                        watermark=max_event_time_seen - allowed_lateness
+                        If window_end<watermark then that window is marked as closed and 
+                        that data will be dropped from aggregations of that window 
+                  3. Window:
+                        A window is a logical time bucket based on event time, used to group events.
+                        It is NOT based on arrival time.
+                        It is based on the event’s timestamp inside the record.
 
 
 
@@ -191,7 +256,20 @@ Anwer:
             ** spark.read.option("mergeSchema", "true").parquet("path")
             
 DATA MODELING :
-* Surrogate KEY ::
+### OLAP VS OLPT:
+ANSWER:
+                  | Feature       | OLTP                     | OLAP                          |
+                  | ------------- | ------------------------ | ----------------------------- |
+                  | Purpose       | Run business operations  | Analyze business data         |
+                  | Query Type    | Simple, short            | Complex, long-running         |
+                  | Operations    | INSERT / UPDATE / DELETE | SELECT (mostly read-heavy)    |
+                  | Data Volume   | Small per transaction    | Huge historical data          |
+                  | Users         | Thousands/millions       | Analysts, BI tools            |
+                  | Schema        | Highly normalized        | Denormalized (Star/Snowflake) |
+                  | Response Time | Milliseconds             | Seconds to minutes            |
+                  | Example DB    | MySQL, PostgreSQL        | Snowflake, Redshift           |
+
+###  Surrogate KEY ::
                   A Surrogate Key is an artificial (system-generated) unique ID given to each row in a dimension table.
                   It has no business meaning.
                   Mostly used in the Dimentional tables .
@@ -206,16 +284,16 @@ DATA MODELING :
  
  #### How would you design a slowly changing dimension (SCD) pipeline that supports Type 1 and Type 2 updates at high scale?
 Answer:
-Basicsally SCD are Slowly changing Dimension Tables  will store the Metainfo(info about the data ).
-Based on the sitaution we chood the SCD 1 or Scd2 
-if we need all the past changes in the Dimension Tables we use SCD 2 
-where SCD2 will be having the 3 extra columns start_date,end_date,valid(Y/N)
-SCD1 Directly replaces the previously existing record it wont store any history ....
-
-For High Scale Data : 
-                  1. I use Hash function for the SCD type 2 columns 
-                  2. While Joining I only Join the Current_values Yes .
-I can impleent SCD2 in the Spark for more clarity ...
+            Basicsally SCD are Slowly changing Dimension Tables  will store the Metainfo(info about the data ).
+            Based on the sitaution we chood the SCD 1 or Scd2 
+            if we need all the past changes in the Dimension Tables we use SCD 2 
+            where SCD2 will be having the 3 extra columns start_date,end_date,valid(Y/N)
+            SCD1 Directly replaces the previously existing record it wont store any history ....
+            
+            For High Scale Data : 
+                              1. I use Hash function for the SCD type 2 columns 
+                              2. While Joining I only Join the Current_values Yes .
+            I can impleent SCD2 in the Spark for more clarity ...
 
 ### Implement SCD type 2 in the SPARK :
             from pyspark.sql import SparkSession
@@ -383,6 +461,16 @@ Uses writer schema and reader schema
             Load into OLAP systems
             Optimize for analytics
 
+
+### How do you ensure pipeline reliability and monitoring in production?
+ANSWER :
+            “We ensure reliability at multiple levels. At the infrastructure level, we configure executor retries, speculative execution, and dynamic allocation.
+            At the data level, we implement strong data quality checks, idempotent writes, and deduplication logic.
+
+            
+            For monitoring, we track infrastructure metrics like job duration and shuffle size, and business metrics like record counts and KPI deviations.
+            Pipelines are orchestrated via Airflow with retries, SLA alerts, and email notifications. Logs are centralized in monitoring systems.
+            For streaming jobs, we use checkpointing to ensure exactly-once processing and automatic recovery from failures.”
 
 
 
