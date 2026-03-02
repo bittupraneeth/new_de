@@ -473,6 +473,16 @@ ANSWER :
             For streaming jobs, we use checkpointing to ensure exactly-once processing and automatic recovery from failures.”
 
 
+### Common Issues faced in The ETL SPARK pipeline :
+
+ANSWER :
+      1. Memory Pressure.
+      2. Data Skewness.
+      3. Excessive Shuffle. 
+      4. During the Joins.
+
+
+
 
 
 
