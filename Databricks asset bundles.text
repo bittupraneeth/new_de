@@ -1,0 +1,27 @@
+Source : ANSH LAMDA 
+
+
+Databricks CLI is wrapper in backend it triggers the REST API .
+
+
+after downloading : Databricks CLI we need top connect to the our databricks worksapce 
+STEPS:
+      1.sqlwarehouse->connection Details ->Copy wen url ,
+      2. in CMD prompt local->databricks auth login url (enter)
+          Default name DEV or SIT 
+      3. Succesffuly authenticated .
+      after authentication 
+
+      4. databricks auth profiles(will display all the profiles)
+      5. Databricks -h (will give all the set of commands)
+What are Databricks Asset Bundles?
+    *** Bundle is end to end definiation of the project.
+    Databricks Asset Bundles are a tool to facilitate the adoption of software engineering best practices, 
+    including source control, code review, testing, and continuous integration and delivery (CI/CD), for your data and AI projects.
+
+  Your bundle project's collection of source files and metadata is deployed as a single bundle to your target environment. A bundle includes the following parts:
+
+    Required cloud infrastructure and workspace configurations
+    Source files, such as notebooks and Python files, that include the business logic
+    Definitions and settings for Databricks resources, such as Lakeflow Jobs, Lakeflow Spark Declarative Pipelines, Dashboards, Model Serving endpoints, MLflow Experiments, and MLflow registered models
+    Unit tests and integration tests
