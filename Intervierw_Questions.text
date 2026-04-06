@@ -169,7 +169,10 @@ Answer :
                         It is based on the event’s timestamp inside the record.
 
 
-
+## Explain how Spark handles shuffle internally.
+            1. Shuffling is the one of the costlier operation in the spark 
+            2. shuffing occurs when wide transformations takes in the spark 
+            
 
 DATABRICICKS:
 ### Difference between the Delta Table and Delta Lake :
@@ -192,15 +195,11 @@ Answer:
 
 
 
-#### what is data lake :?
+#### what is data lake ?
 A Data Lake is a centralized storage system that stores raw data in its original format — structured, semi-structured, or unstructured.
 
 
-
-
-
-### 
-Difference between Auto Loader and Event Hubs — in what scenarios would you choose one over the other?
+###  Difference between Auto Loader and Event Hubs — in what scenarios would you choose one over the other?
 Answer:
       Event Hubs is a like Kafka 
       | Feature   | Auto Loader                        | Event Hubs                |
@@ -285,7 +284,7 @@ ANSWER:
  #### How would you design a slowly changing dimension (SCD) pipeline that supports Type 1 and Type 2 updates at high scale?
 Answer:
             Basicsally SCD are Slowly changing Dimension Tables  will store the Metainfo(info about the data ).
-            Based on the sitaution we chood the SCD 1 or Scd2 
+            Based on the sitaution we chood the SCD 1 or SCD 2 
             if we need all the past changes in the Dimension Tables we use SCD 2 
             where SCD2 will be having the 3 extra columns start_date,end_date,valid(Y/N)
             SCD1 Directly replaces the previously existing record it wont store any history ....
