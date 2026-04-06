@@ -5,6 +5,8 @@ Databricks CLI is wrapper in backend it triggers the REST API .
 
 
 after downloading : Databricks CLI we need top connect to the our databricks worksapce 
+
+Databricks -h for help 
 STEPS:
       1.sqlwarehouse->connection Details ->Copy wen url ,
       2. in CMD prompt local->databricks auth login url (enter)
@@ -25,3 +27,17 @@ What are Databricks Asset Bundles?
     Source files, such as notebooks and Python files, that include the business logic
     Definitions and settings for Databricks resources, such as Lakeflow Jobs, Lakeflow Spark Declarative Pipelines, Dashboards, Model Serving endpoints, MLflow Experiments, and MLflow registered models
     Unit tests and integration tests
+
+** Starting Asset Bundles :
+
+      1. Initiaises the bundle ->databricks bundle init
+Let us go file by fle what does each file will be Doing:
+
+.databricks->this is folder is basically a transactional log for this bundle 
+
+to Deploy->databricks bundle deploy --target DEV
+for Summary->databricks bundle summary --target Prod
+      it shows where you are deploying at what location 
+      which jobs are getting scheduled 
+      user job names and all 
+      
