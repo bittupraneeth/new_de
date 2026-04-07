@@ -480,11 +480,17 @@ ANSWER :
       3. Excessive Shuffle. 
       4. During the Joins.
 
+DBT:-
+## What is DBT?
 
+“DBT is a transformation tool that allows us to write SQL-based transformations on top of data warehouses and manage them using software 
+engineering best practices like version control, testing, and modularity.”
 
+REF:
+ref() is used to reference another DBT model. It creates dependencies and ensures models are executed in the correct order.
 
-
-
+Incremental Model:
+“Incremental models process only new or updated data instead of reprocessing the entire dataset, improving performance and reducing cos
 
 
 
