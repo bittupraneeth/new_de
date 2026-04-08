@@ -1,0 +1,39 @@
+Source Ansh Lamba:
+
+DBT is compatible for 3.12.** versions only
+DATA BUILD TOOL :
+    1.It is basically a transformation tool 
+    2. Transformation part can be done by the DBT 
+in Datat engineering we use the Pyspark for transformnations 
+but spark is not onmly used for the transformation part it does optimiztions .parllelizing and many more  but DBT does t he Transformatioons 
+
+WHY DBT :
+      1. DBT provides the Modularity(gives plug and play templates ).
+
+what are DBT Platforms:
+    1. DBT core 
+        1.it is Core engine 
+        2. is a cli tool which is opensource (free)
+        3. Since it is the open source we need to manage it .
+    2. DBT Cloud:
+        1. it is a product managed platform build on top of the DBT core 
+        2. Managed by DBT
+        3. we will get DBT UI 
+
+    3. DBT canvas 
+          1. It is a feature availablke in DBT cloud 
+          2. A dedicated tab for DBT canvas in DBT Cloud 
+          3. Here we dont need to write the code we use drag and drop for the transformations
+
+Backbone of DBT 
+
+DBT Models:
+       
+                      (it is the coding part of the DBT)
+      1. DBT is just a tranformation layer it wont provide any Compute part 
+      2. Resources will be getting used from the Databricks/Snowflake 
+      3.
+      
+
+
+      
