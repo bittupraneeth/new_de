@@ -49,7 +49,52 @@ We have built 7–8 live T-1 dashboards, which are actively used by business and
 40 GB size .
 --num-executors 20
 --executor-cores 4
+
+
+ok sure let me walk through the project and its arhitecture .
+
+In India Jio Holds more than 50 Lakh telecom towers .
+In our project, we built a large-scale data pipeline to monitor energy assets(Like DG,GRID<) across telecom towers, 
+where we process around 3 billion records daily coming from IoT devices. The data is ingested from an upstream DAP team and landed into HDFS in a
+partitioned format based on asset type and date.  the first step was to standardize and organize this raw data for downstream processing.
+
+On top of this raw data, we developed Spark-based ETL pipelines to transform and unify the data. One of the key challenges was combining multiple asset streams, so we performed time-based joins at the tower and timestamp level to create a consolidated view of all energy sources for each tower. Along with this, we implemented a robust data quality framework where we applied multiple validation checks such as identifying missing telemetry, invalid readings, and abnormal spikes. Any records failing these checks were filtered out, and corresponding issues were reported to the ground engineering teams for further inspection.
+
+The cleaned and validated data was then stored back into HDFS, which we treated as our bronze layer. This ensured that only high-quality, reliable data was available for downstream processing. Building on top of this, we created aggregation pipelines using Spark to generate business-critical KPIs at hourly, daily, and monthly levels. These KPIs included metrics like energy consumption, battery health indicators, and anomaly detection signals that were crucial for operational monitoring.
+
+For serving the data, we stored the aggregated results in Cassandra, as it provides low-latency reads and supports high concurrency, which is ideal for powering real-time dashboards. These dashboards were used by operations and business teams to monitor tower performance and detect potential issues.
+
+To ensure reliability and maintainability, the entire pipeline was orchestrated using Airflow, where we configured task dependencies, retries, and alerting mechanisms. Overall, the architecture follows a layered approach with clear separation between ingestion, processing, storage, aggregation, and serving, enabling both scalability and efficient data consumption.”**
 --executor-memory 16G
 --conf spark.sql.shuffle.partitions=400
 
 This platform helps engineering teams detect faulty assets, energy theft, and performance inefficiencies.
+
+
+IN india Jio Holds more than 50 Lakh Towers throughout the India .
+Where all these towers will get Energy from the Different Asses Like DG, GRID,SOLAR, Battery .
+
+In Our Project we built a large scale Data pipeline to monitor all these energy assets usage and performance  using the Dashboards daily .
+So we are doing the Batch Processing .
+
+SO at first we get data from the DAP upstream Team and landed  into HDFS in a partitioned format based on the asset and Date .where we will be getting 
+around 3 Billion Records Daily with 5 min FDrequency from all the asets.
+
+On top of this Raw Data we Built an ETL Pipeline and cleaned the Assets data and dumped into the HDFS again 
+Here we kept 5 to 8 Quality checks based on the asset type if a tower passing all the quality checks then only we will be dumping in the SIlver layer 
+Towers which are failing here will be reported to ground team with the Proper casuse so that Ground field Team Can Ispect 
+
+This Makes sure that what all analytics performed in the Downstream are realible and meaningfull and removes all the towers data which having 
+unappropriate data .
+
+On Top of this We built asset wise analyiticcs on daily basis like daily summaries hourly analyisis 
+and we  merge all these aggregated assets data to make data unify and dump it into the Cassandra (Since this thoughput is high )
+
+This Results data will be using by Full stack Team to showcase the results in websites 
+(Since application in developing stage)
+we are dumping all the Aggregated data from cassandra to MYSQL lab in Superset 
+and showcase all the reults in the Superset 
+
+where we are maintaing 8 lively Dashboards in Prod
+and continuosly monitored by APex Team 
+
