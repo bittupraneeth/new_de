@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jio Tower Streaming Pipeline Architecture</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0e1a;
+    color: #e2e8f0;
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    padding: 32px 24px;
+  }
+
+  h1 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    font-weight: 600;
+    color: #64ffda;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    text-align: center;
+    font-size: 12px;
+    color: #4a5568;
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 36px;
+    letter-spacing: 1px;
+  }
+
+  .pipeline {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* ── Layer wrapper ── */
+  .layer {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+  }
+
+  /* ── Layer label on left ── */
+  .layer-label {
+    width: 72px;
+    min-width: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 4px;
+  }
+
+  .layer-label span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+  }
+
+  /* ── Cards container ── */
+  .cards {
+    flex: 1;
+    display: flex;
+    gap: 8px;
+    padding: 10px 0;
+  }
+
+  /* ── Single card ── */
+  .card {
+    flex: 1;
+    border-radius: 10px;
+    padding: 14px 16px;
+    border: 1px solid;
+    position: relative;
+    cursor: default;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .card:hover {
+    transform: translateY(-2px);
+  }
+
+  .card-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+  }
+
+  .card-sub {
+    font-size: 10px;
+    line-height: 1.6;
+    opacity: 0.75;
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-top: 6px;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Arrow connector ── */
+  .arrow-row {
+    display: flex;
+    align-items: center;
+    padding: 0 0 0 72px;
+  }
+
+  .arrow-line {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .arrow-line .vline {
+    width: 2px;
+    height: 18px;
+    background: linear-gradient(to bottom, #2d3748, #4a5568);
+  }
+
+  .arrow-line .chevron {
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 7px solid #4a5568;
+  }
+
+  .arrow-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: #4a5568;
+    letter-spacing: 1px;
+    margin-left: 10px;
+    white-space: nowrap;
+  }
+
+  /* ── Split arrow (one to two) ── */
+  .split-arrow {
+    padding: 0 0 0 72px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+
+  .split-line {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .split-line .vline {
+    width: 2px;
+    height: 14px;
+    background: #2d3748;
+  }
+
+  .split-line .chevron {
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 7px solid #4a5568;
+  }
+
+  /* ── Color themes ── */
+
+  /* Gray — Sources */
+  .gray {
+    background: #131929;
+    border-color: #2d3748;
+    box-shadow: 0 0 0 0 transparent;
+  }
+  .gray:hover { box-shadow: 0 4px 20px rgba(45,55,72,0.4); }
+  .gray .card-title { color: #a0aec0; }
+  .gray .tag { background: #1e2a3a; color: #718096; }
+  .layer-label.gray-label span { color: #4a5568; }
+
+  /* Amber — Kafka */
+  .amber {
+    background: #1a1500;
+    border-color: #744210;
+    box-shadow: 0 0 12px rgba(251,191,36,0.05);
+  }
+  .amber:hover { box-shadow: 0 4px 24px rgba(251,191,36,0.12); }
+  .amber .card-title { color: #f6c90e; }
+  .amber .card-sub { color: #d69e2e; }
+  .amber .tag { background: #2d1f00; color: #d69e2e; }
+  .layer-label.amber-label span { color: #d69e2e; }
+
+  /* Purple — Spark */
+  .purple {
+    background: #120d1f;
+    border-color: #553c9a;
+    box-shadow: 0 0 12px rgba(159,122,234,0.06);
+  }
+  .purple:hover { box-shadow: 0 4px 24px rgba(159,122,234,0.15); }
+  .purple .card-title { color: #b794f4; }
+  .purple .card-sub { color: #9f7aea; }
+  .purple .tag { background: #1a1030; color: #9f7aea; }
+  .layer-label.purple-label span { color: #9f7aea; }
+
+  /* Coral — Alerts */
+  .coral {
+    background: #1a0f0a;
+    border-color: #7b341e;
+    box-shadow: 0 0 12px rgba(252,129,74,0.06);
+  }
+  .coral:hover { box-shadow: 0 4px 24px rgba(252,129,74,0.15); }
+  .coral .card-title { color: #fc8149; }
+  .coral .card-sub { color: #c05621; }
+  .coral .tag { background: #2d1007; color: #c05621; }
+  .layer-label.coral-label span { color: #c05621; }
+
+  /* Teal — Cassandra */
+  .teal {
+    background: #061714;
+    border-color: #1d6a5a;
+    box-shadow: 0 0 12px rgba(56,178,172,0.06);
+  }
+  .teal:hover { box-shadow: 0 4px 24px rgba(56,178,172,0.15); }
+  .teal .card-title { color: #4fd1c7; }
+  .teal .card-sub { color: #2c9e96; }
+  .teal .tag { background: #082820; color: #2c9e96; }
+  .layer-label.teal-label span { color: #2c9e96; }
+
+  /* Blue — Consumers */
+  .blue {
+    background: #050f1f;
+    border-color: #1a4a7a;
+    box-shadow: 0 0 12px rgba(66,153,225,0.06);
+  }
+  .blue:hover { box-shadow: 0 4px 24px rgba(66,153,225,0.15); }
+  .blue .card-title { color: #63b3ed; }
+  .blue .card-sub { color: #3182ce; }
+  .blue .tag { background: #071228; color: #3182ce; }
+  .layer-label.blue-label span { color: #3182ce; }
+
+  /* ── Legend ── */
+  .legend {
+    max-width: 900px;
+    margin: 28px auto 0;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding-top: 20px;
+    border-top: 1px solid #1a2035;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    color: #4a5568;
+  }
+
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  /* ── Kafka topic pills row ── */
+  .topics-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  .topic-pill {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: #2d1f00;
+    color: #d69e2e;
+    border: 1px solid #744210;
+  }
+
+  /* Alert types inside coral card */
+  .alert-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-top: 6px;
+  }
+
+  .alert-item {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #c05621;
+  }
+
+  .alert-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .crit { background: #fc4949; }
+  .warn { background: #ecc94b; }
+</style>
+</head>
+<body>
+
+<h1>Jio Tower Energy Asset</h1>
+<p class="subtitle">// Real-time Streaming Alert Pipeline · 50L+ Towers</p>
+
+<div class="pipeline">
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- LAYER 1 — SOURCES                             -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="layer">
+    <div class="layer-label gray-label">
+      <span>Sources</span>
+    </div>
+    <div class="cards">
+      <div class="card gray">
+        <div class="card-title">DG</div>
+        <div class="card-sub">Diesel Generator<br>Fuel · Runtime · Temp</div>
+        <span class="tag">topic-dg</span>
+      </div>
+      <div class="card gray">
+        <div class="card-title">Battery</div>
+        <div class="card-sub">SOC · Temperature<br>Voltage · Current</div>
+        <span class="tag">topic-battery</span>
+      </div>
+      <div class="card gray">
+        <div class="card-title">Solar</div>
+        <div class="card-sub">Output · Irradiance<br>Panel Temp</div>
+        <span class="tag">topic-solar</span>
+      </div>
+      <div class="card gray">
+        <div class="card-title">Grid</div>
+        <div class="card-sub">Voltage · Frequency<br>Availability</div>
+        <span class="tag">topic-grid</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- arrow -->
+  <div class="arrow-row">
+    <div class="arrow-line"><div class="vline"></div><div class="chevron"></div></div>
+    <span class="arrow-label">5-min frequency · tower_id as Kafka key</span>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- LAYER 2 — KAFKA                               -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="layer">
+    <div class="layer-label amber-label">
+      <span>Ingest</span>
+    </div>
+    <div class="cards">
+      <div class="card amber" style="flex: 1;">
+        <div class="card-title">Apache Kafka — Event Streaming Bus</div>
+        <div class="card-sub">Decouples producers from consumers · handles backpressure · 24 partitions for parallelism</div>
+        <div class="topics-row">
+          <span class="topic-pill">topic-dg</span>
+          <span class="topic-pill">topic-battery</span>
+          <span class="topic-pill">topic-solar</span>
+          <span class="topic-pill">topic-grid</span>
+          <span class="topic-pill" style="background:#1a0a00;color:#fc8149;border-color:#7b341e;">topic-alerts</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- arrow -->
+  <div class="arrow-row">
+    <div class="arrow-line"><div class="vline"></div><div class="chevron"></div></div>
+    <span class="arrow-label">readStream · maxOffsetsPerTrigger=500K · startingOffsets=latest</span>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- LAYER 3 — SPARK                               -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="layer">
+    <div class="layer-label purple-label">
+      <span>Process</span>
+    </div>
+    <div class="cards">
+      <div class="card purple" style="flex:1;">
+        <div class="card-title">Spark Structured Streaming — Stateful Processing</div>
+        <div class="card-sub">
+          from_json (PERMISSIVE) → filter nulls → withWatermark(10 min) → sliding window(15 min / 5 min slide)<br>
+          foreachBatch → evaluate alert rules → write KPIs
+        </div>
+        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
+          <span class="tag">watermark: 10 min</span>
+          <span class="tag">window: 15 min</span>
+          <span class="tag">slide: 5 min</span>
+          <span class="tag">outputMode: append</span>
+          <span class="tag">checkpoint: /tmp/checkpoints/</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- arrow -->
+  <div class="arrow-row">
+    <div class="arrow-line"><div class="vline"></div><div class="chevron"></div></div>
+    <span class="arrow-label">avg / min / max per tower per window → threshold evaluation</span>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- LAYER 4 — ALERT ENGINE                        -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="layer">
+    <div class="layer-label coral-label">
+      <span>Alerts</span>
+    </div>
+    <div class="cards">
+      <div class="card coral" style="flex:1;">
+        <div class="card-title">Alert KPI Engine — alert_rules.py</div>
+        <div class="alert-list">
+          <div class="alert-item"><div class="alert-dot crit"></div>DG Low Fuel &lt; 20% · DG High Temp &gt; 80°C · DG Overusage &gt; 8hr</div>
+          <div class="alert-item"><div class="alert-dot crit"></div>Battery Deep Discharge &lt; 15% SOC · Battery High Temp &gt; 45°C</div>
+          <div class="alert-item"><div class="alert-dot warn"></div>Battery Overcharging &gt; 58V · Solar Underperformance &lt; 60%</div>
+          <div class="alert-item"><div class="alert-dot crit"></div>Grid Outage · Grid Low Voltage &lt; 200V · Frequency out of 49–51Hz</div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:8px;">
+          <span class="tag" style="background:#1a0500;color:#fc4949;border:1px solid #7b0000;">CRITICAL</span>
+          <span class="tag" style="background:#1a1400;color:#ecc94b;border:1px solid #744210;">WARNING</span>
+          <span class="tag">publishes → topic-alerts</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- split arrow to two outputs -->
+  <div class="split-arrow">
+    <div class="split-line"><div class="vline"></div><div class="chevron"></div></div>
+    <div class="split-line"><div class="vline"></div><div class="chevron"></div></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- LAYER 5 — SERVING                             -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="layer">
+    <div class="layer-label teal-label">
+      <span>Serve</span>
+    </div>
+    <div class="cards">
+      <div class="card teal">
+        <div class="card-title">Apache Cassandra</div>
+        <div class="card-sub">KPIs + alert history<br>Partition: (tower_id, date)<br>Clustering: timestamp DESC</div>
+        <span class="tag">high write throughput</span>
+      </div>
+      <div class="card coral">
+        <div class="card-title">Notification Service</div>
+        <div class="card-sub">Consumes topic-alerts<br>manual offset commit<br>MAX_RETRIES = 3</div>
+        <span class="tag">FCM push · SMS fallback</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- split arrow to two consumers -->
+  <div class="split-arrow">
+    <div class="split-line"><div class="vline"></div><div class="chevron"></div></div>
+    <div class="split-line"><div class="vline"></div><div class="chevron"></div></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- LAYER 6 — CONSUMERS                           -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="layer">
+    <div class="layer-label blue-label">
+      <span>Output</span>
+    </div>
+    <div class="cards">
+      <div class="card blue">
+        <div class="card-title">Web Dashboard</div>
+        <div class="card-sub">Live tower health<br>Asset-wise alert history<br>Reads from Cassandra</div>
+        <span class="tag">full-stack app</span>
+      </div>
+      <div class="card blue">
+        <div class="card-title">Field Engineer App</div>
+        <div class="card-sub">Actionable push alerts<br>Tower location + severity<br>Acknowledge / Resolve</div>
+        <span class="tag">FCM · MSG91 SMS</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Legend -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#d69e2e;"></div>Kafka (Ingest)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#9f7aea;"></div>Spark Streaming (Process)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#fc8149;"></div>Alert Engine (Generate)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#4fd1c7;"></div>Cassandra (Persist)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#63b3ed;"></div>Consumers (Output)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#fc4949;"></div>CRITICAL alert</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ecc94b;"></div>WARNING alert</div>
+</div>
+
+</body>
+</html>
