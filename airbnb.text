@@ -1,0 +1,10 @@
+Data warehouses are designed in such a way that
+1. lot of queries are run in the parllel
+2.we can  fetch lot of data in one query 
+
+DBT :
+1. DBT is solved the problem called modularized coding .
+2. DBT is just the transformation layer oin its oiwn it doesnt hold any data ands the 
+compute power it is just like the template 
+3. In ELT T is achieved by the DBT .
+
